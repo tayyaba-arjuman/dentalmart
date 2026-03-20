@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Shopping Cart{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>🛒 Shopping Cart</h2>
+  <p>Review your selected items before checkout</p>
+</div>
+
+<main class="container">
+  <!-- Empty state -->
+  <div class="empty-state" id="emptyState" style="display:none">
+    <span class="empty-icon">🛒</span>
+    <h3>Your cart is empty</h3>
+    <p>Browse the catalog and add dental instruments to get started.</p>
+    <a href="{{ url_for('catalog') }}" class="btn btn-primary mt-3">Browse Products →</a>
+  </div>
+
+  <!-- Cart layout -->
+  <div class="cart-page-layout" id="cartLayout" style="display:none">
+
+    <!-- Left: items -->
+    <div>
+      <div id="cartItems"></div>
+      <div style="margin-top:1rem;display:flex;gap:1rem;flex-wrap:wrap">
+        <a href="{{ url_for('catalog') }}" class="btn btn-outline btn-sm">← Continue Shopping</a>
+        <button class="btn btn-danger btn-sm" onclick="clearCartConfirm()">🗑️ Clear Cart</button>
+      </div>
+    </div>
+
+    <!-- Right: summary -->
+    <div class="order-summary-card">
+      <div class="order-summary-title">Order Summary</div>
+      <div class="summary-row"><span>Items (<span id="itemCount">0</span>)</span><span id="subtotalVal">₹0</span></div>
+      <div class="summary-row"><span>Shipping</span><span id="shippingVal">₹80</span></div>
+      <div class="summary-row" id="discountRow" style="display:none;color:var(--green)">
+        <span>Discount</span><span id="discountVal">−₹0</span>
+      </div>
+      <div class="summary-row total"><span>Total</span><span id="grandTotalVal">₹0</span></div>
+
+      <!-- Free shipping bar -->
+      <div class="free-ship-bar" id="freeShipBar">
+        <div class="fsb-label">Progress to free shipping</div>
+        <div class="fsb-track"><div class="fsb-fill" id="fsbFill" style="width:0%"></div></div>
+        <div class="fsb-msg" id="fsbMsg"></div>
+      </div>
+
+      <!-- Promo code -->
+      <div class="form-group" style="margin-bottom:.75rem">
+        <label>Promo Code</label>
+        <div style="display:flex;gap:.5rem">
+          <input class="form-input" id="promoInput" placeholder="e.g. DENTAL10" style="border-radius:8px">
+          <button class="btn btn-outline btn-sm" style="white-space:nowrap" onclick="applyPromo()">Apply</button>
+        </div>
+        <div class="form-error" id="promoErr">Invalid promo code.</div>
+        <div class="form-success" id="promoOk" style="display:none">✅ Promo applied! 10% off.</div>
+      </div>
+
+      <button class="btn btn-primary btn-full" onclick="goCheckout()" style="margin-top:.5rem;padding:1rem;font-size:1rem">
+        Proceed to Checkout →
+      </button>
+      <div style="text-align:center;margin-top:.85rem;font-size:.75rem;color:var(--muted)">
+        🔒 Secure checkout &nbsp;·&nbsp; ↩️ Easy returns
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  /* Fetch all products so we can render cart items with images */
+  window.PRODUCTS = [];
+  let promoApplied = false;
+
+  async function loadProducts() {
+    const data = await apiFetch('/api/products');
+    if (data.success) window.PRODUCTS = data.products;
+    renderCartPage();
+  }
+
+  function renderCartPage() {
+    const cart = Cart.get();
+    const empty  = document.getElementById('emptyState');
+    const layout = document.getElementById('cartLayout');
+    if (!cart.length) { empty.style.display = ''; layout.style.display = 'none'; return; }
+    empty.style.display = 'none'; layout.style.display = '';
+
+    document.getElementById('cartItems').innerHTML = cart.map(c => {
+      const p = window.PRODUCTS.find(p => p.id === c.id);
+      if (!p) return '';
+      const imgSrc = `/static/images/${p.image}`;
+      return `
+      <div class="cart-item">
+        <img class="cart-item-img" src="${imgSrc}" alt="${p.name}"
+             onerror="this.src='/static/images/placeholder.jpg'">
+        <div class="cart-item-info">
+          <div class="cart-item-name">${p.name}</div>
+          <div class="cart-item-meta">${p.category} &middot; ${fmt(p.price)} each</div>
+        </div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQtyUI(${p.id},-1)">−</button>
+          <span class="qty-num" id="qty-${p.id}">${c.qty}</span>
+          <button class="qty-btn" onclick="changeQtyUI(${p.id},+1)">+</button>
+        </div>
+        <div class="cart-item-price">${fmt(p.price * c.qty)}</div>
+        <button class="remove-btn" onclick="removeItemUI(${p.id})" title="Remove">🗑️</button>
+      </div>`;
+    }).join('');
+
+    updateSummary();
+  }
+
+  function changeQtyUI(id, delta) { Cart.changeQty(id, delta); updateCartBadge(); renderCartPage(); }
+  function removeItemUI(id) {
+    const p = window.PRODUCTS.find(p => p.id === id);
+    Cart.remove(id); updateCartBadge(); renderCartPage();
+    showToast('🗑️ ' + (p ? p.name : 'Item') + ' removed');
+  }
+  function clearCartConfirm() {
+    if (!confirm('Remove all items from cart?')) return;
+    Cart.clear(); updateCartBadge(); renderCartPage(); showToast('🗑️ Cart cleared');
+  }
+
+  function updateSummary() {
+    const subtotal = Cart.subtotal(window.PRODUCTS);
+    const shipping = Cart.shipping(window.PRODUCTS);
+    const discount = promoApplied ? Math.round(subtotal * 0.1) : 0;
+    const grand    = subtotal + shipping - discount;
+
+    document.getElementById('itemCount').textContent    = Cart.totalItems();
+    document.getElementById('subtotalVal').textContent  = fmt(subtotal);
+    document.getElementById('shippingVal').textContent  = shipping ? fmt(shipping) : '🎉 FREE';
+    document.getElementById('grandTotalVal').textContent = fmt(grand);
+
+    const dr = document.getElementById('discountRow');
+    dr.style.display = discount ? '' : 'none';
+    document.getElementById('discountVal').textContent = '−' + fmt(discount);
+
+    const pct = Math.min((subtotal / 999) * 100, 100);
+    document.getElementById('fsbFill').style.width = pct + '%';
+    const rem = 999 - subtotal;
+    document.getElementById('fsbMsg').textContent = rem > 0 ? `Add ${fmt(rem)} more for FREE shipping!` : '🎉 You have FREE shipping!';
+    document.getElementById('freeShipBar').style.display = shipping ? '' : 'none';
+  }
+
+  const VALID_PROMOS = ['DENTAL10','STUDENT10','DM2025'];
+  function applyPromo() {
+    const code = document.getElementById('promoInput').value.trim().toUpperCase();
+    hide('promoErr'); hide('promoOk');
+    if (VALID_PROMOS.includes(code)) { promoApplied = true; show('promoOk'); updateSummary(); }
+    else show('promoErr');
+  }
+
+  function goCheckout() {
+    if (!window.LOGGED_IN) {
+      showToast('🔐 Please login to checkout', true);
+      setTimeout(() => window.location.href = '/login', 1100);
+      return;
+    }
+    sessionStorage.setItem('dm_promo', promoApplied ? '1' : '0');
+    window.location.href = '/payment';
+  }
+
+  document.addEventListener('DOMContentLoaded', loadProducts);
+</script>
+{% endblock %}

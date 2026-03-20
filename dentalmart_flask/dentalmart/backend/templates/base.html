@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}DentalMart{% endblock %} – Professional Dental Supplies</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ══ PROMO BAR ════════════════════════════════════════ -->
+<div class="promo-banner">
+  🎓 Student Special: <strong>FREE delivery</strong> on orders above ₹999 &nbsp;·&nbsp; Use code <strong>DENTAL10</strong> for 10% off
+</div>
+
+<!-- ══ NAVBAR ═══════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="{{ url_for('index') }}" class="navbar-logo">
+      <div class="navbar-logo-icon">🦷</div>
+      <span class="navbar-logo-text">Dental<span>Mart</span></span>
+    </a>
+
+    <ul class="nav-links" id="navLinks">
+      <li><a href="{{ url_for('index') }}"   {% if request.endpoint == 'index'   %}class="active"{% endif %}>🏠 Home</a></li>
+      <li><a href="{{ url_for('catalog') }}" {% if request.endpoint == 'catalog' %}class="active"{% endif %}>📦 Catalog</a></li>
+      {% if user %}
+        <li><a href="#" id="logoutBtn">👤 Logout</a></li>
+      {% else %}
+        <li><a href="{{ url_for('login_page') }}" {% if request.endpoint == 'login_page' %}class="active"{% endif %}>👤 Login</a></li>
+      {% endif %}
+    </ul>
+
+    <a href="{{ url_for('cart') }}" class="nav-cart-btn">
+      🛒 Cart
+      <span class="cart-badge" id="cartBadge"></span>
+    </a>
+
+    {% if user %}
+    <div class="user-avatar visible" title="{{ user.name }} — click Logout to sign out">
+      {{ user.name[0].upper() }}
+    </div>
+    {% endif %}
+
+    <div class="hamburger" id="hamburger">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ PAGE CONTENT ═════════════════════════════════════ -->
+{% block content %}{% endblock %}
+
+<!-- ══ FOOTER ═══════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-col">
+      <h4>🦷 DentalMart</h4>
+      <p>Professional dental instruments &amp; materials for BDS and MDS students across India.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Quick Links</h4>
+      <a href="{{ url_for('index') }}">Home</a>
+      <a href="{{ url_for('catalog') }}">Catalog</a>
+      <a href="{{ url_for('cart') }}">Cart</a>
+      <a href="{{ url_for('login_page') }}">Login</a>
+    </div>
+    <div class="footer-col">
+      <h4>Categories</h4>
+      <a href="{{ url_for('catalog', cat='Examination') }}">Examination</a>
+      <a href="{{ url_for('catalog', cat='Extraction') }}">Extraction</a>
+      <a href="{{ url_for('catalog', cat='Periodontics') }}">Periodontics</a>
+      <a href="{{ url_for('catalog', cat='Restorative') }}">Restorative</a>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <p>📧 support@dentalmart.in</p>
+      <p>📞 1800-123-4567 (Toll Free)</p>
+      <p>🕐 Mon–Sat, 9am–6pm IST</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2025 <strong>DentalMart</strong> — Made for dental students. All prices in INR ₹.
+  </div>
+</footer>
+
+<!-- ══ TOAST ═════════════════════════════════════════════ -->
+<div class="toast" id="toast"><span class="toast-msg"></span></div>
+
+<!-- ══ SCRIPTS ═══════════════════════════════════════════ -->
+<script>
+  /* Expose server-side state to JS */
+  window.LOGGED_IN = {{ 'true' if user else 'false' }};
+  window.CURRENT_USER = {{ user | tojson if user else 'null' }};
+</script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

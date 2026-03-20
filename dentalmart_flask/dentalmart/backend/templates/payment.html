@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+
+<!-- Checkout section -->
+<div id="checkoutSection">
+  <div class="page-header">
+    <h2>🎯 Checkout</h2>
+    <p>Complete your order — simple, fast, and secure</p>
+  </div>
+
+  <main class="container">
+    <div class="checkout-layout">
+
+      <!-- ── Left: forms ── -->
+      <div style="display:flex;flex-direction:column;gap:1.5rem">
+
+        <!-- Delivery address -->
+        <div class="checkout-card">
+          <div style="font-weight:700;font-size:1rem;color:var(--navy);margin-bottom:1.2rem;display:flex;align-items:center;gap:.5rem">
+            <span class="step-badge">1</span> Delivery Address
+          </div>
+
+          <div class="info-banner">
+            👤 Ordering as <strong>{{ user.name }}</strong> ({{ user.email }})
+          </div>
+
+          <div class="form-group">
+            <label>Full Name</label>
+            <input class="form-input" id="delName" value="{{ user.name }}" placeholder="Name on delivery">
+          </div>
+          <div class="form-group">
+            <label>Mobile Number</label>
+            <input class="form-input" id="delPhone" placeholder="10-digit mobile" maxlength="10">
+          </div>
+          <div class="form-group">
+            <label>Address Line 1</label>
+            <input class="form-input" id="delAddr1" placeholder="Flat / House No., Building Name">
+          </div>
+          <div class="form-group">
+            <label>Address Line 2 (optional)</label>
+            <input class="form-input" id="delAddr2" placeholder="Area, Landmark">
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group"><label>City</label><input class="form-input" id="delCity" placeholder="City"></div>
+            <div class="form-group"><label>State</label><input class="form-input" id="delState" placeholder="State"></div>
+          </div>
+          <div class="form-group">
+            <label>PIN Code</label>
+            <input class="form-input" id="delPin" placeholder="6-digit PIN" maxlength="6">
+          </div>
+          <div class="form-error" id="addrErr">Please fill all required address fields.</div>
+        </div>
+
+        <!-- Payment method -->
+        <div class="checkout-card">
+          <div style="font-weight:700;font-size:1rem;color:var(--navy);margin-bottom:1.2rem;display:flex;align-items:center;gap:.5rem">
+            <span class="step-badge">2</span> Payment Method
+          </div>
+
+          <div class="pay-options">
+            <label class="pay-option selected" id="opt-cod" onclick="selectPay('cod')">
+              <input type="radio" name="pay" value="cod" checked>
+              <div class="pay-option-icon">🚚</div>
+              <div><div class="pay-option-label">Cash on Delivery</div><div class="pay-option-sub">Pay when your order arrives</div></div>
+            </label>
+            <label class="pay-option" id="opt-upi" onclick="selectPay('upi')">
+              <input type="radio" name="pay" value="upi">
+              <div class="pay-option-icon">📱</div>
+              <div><div class="pay-option-label">UPI Payment</div><div class="pay-option-sub">GPay, PhonePe, Paytm, BHIM</div></div>
+            </label>
+            <label class="pay-option" id="opt-card" onclick="selectPay('card')">
+              <input type="radio" name="pay" value="card">
+              <div class="pay-option-icon">💳</div>
+              <div><div class="pay-option-label">Credit / Debit Card</div><div class="pay-option-sub">Visa, Mastercard, RuPay</div></div>
+            </label>
+          </div>
+
+          <div id="upiField" style="display:none;margin-top:.5rem">
+            <div class="form-group">
+              <label>UPI ID</label>
+              <input class="form-input" id="upiId" placeholder="yourname@upi">
+            </div>
+          </div>
+
+          <div id="cardFields" style="display:none;margin-top:.5rem">
+            <div class="form-group">
+              <label>Card Number</label>
+              <input class="form-input" id="cardNum" placeholder="1234 5678 9012 3456" maxlength="19" oninput="fmtCard(this)">
+            </div>
+            <div class="form-grid-2">
+              <div class="form-group"><label>Expiry</label><input class="form-input" id="cardExp" placeholder="MM / YY" maxlength="7" oninput="fmtExpiry(this)"></div>
+              <div class="form-group"><label>CVV</label><input class="form-input" id="cardCvv" placeholder="•••" maxlength="3" type="password"></div>
+            </div>
+            <div class="form-group"><label>Name on Card</label><input class="form-input" id="cardName" placeholder="As printed on card"></div>
+          </div>
+
+          <div class="form-error" id="payErr">Please complete payment details.</div>
+        </div>
+      </div>
+
+      <!-- ── Right: order summary ── -->
+      <div>
+        <div class="checkout-card" style="position:sticky;top:80px">
+          <div style="font-weight:700;font-size:1rem;color:var(--navy);margin-bottom:1.2rem;display:flex;align-items:center;gap:.5rem">
+            <span class="step-badge">3</span> Order Summary
+          </div>
+          <div id="orderItemsList"></div>
+          <div style="background:var(--bg);padding:.5rem 0;margin-top:.5rem">
+            <div class="summary-row"><span>Subtotal</span><span id="paySubtotal">₹0</span></div>
+            <div class="summary-row"><span>Shipping</span><span id="payShipping">₹0</span></div>
+            <div class="summary-row" id="payDiscRow" style="display:none;color:var(--green)"><span>Promo (10%)</span><span id="payDiscount">−₹0</span></div>
+            <div class="summary-row total"><span>Grand Total</span><span id="payGrand">₹0</span></div>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="placeOrder()" style="margin-top:1rem;padding:1rem;font-size:1rem">
+            🎯 Place Order
+          </button>
+          <div style="text-align:center;margin-top:.7rem;font-size:.75rem;color:var(--muted)">
+            🔒 Simulated checkout — no real payment processed
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Order confirmed section -->
+<div id="successSection" style="display:none">
+  <main class="container">
+    <div style="max-width:520px;margin:3rem auto">
+      <div class="checkout-card" style="text-align:center;padding:2.5rem">
+        <span class="confirm-icon">🎉</span>
+        <h2 class="confirm-title">Order Confirmed!</h2>
+        <p class="confirm-sub" id="confirmMsg">Your dental instruments are being prepared for dispatch.</p>
+        <div class="order-id-box" id="confirmOrderId">Order ID: …</div>
+        <div class="confirm-sub" id="confirmDetails" style="margin-bottom:1.5rem"></div>
+        <div style="display:flex;flex-direction:column;gap:.75rem;max-width:280px;margin:0 auto">
+          <a href="{{ url_for('catalog') }}" class="btn btn-primary btn-full">Continue Shopping →</a>
+          <a href="{{ url_for('index') }}"   class="btn btn-outline  btn-full">← Back to Home</a>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let selectedPayment = 'cod';
+  const promoApplied  = sessionStorage.getItem('dm_promo') === '1';
+  window.PRODUCTS = [];
+
+  async function loadAndRender() {
+    const data = await apiFetch('/api/products');
+    if (data.success) window.PRODUCTS = data.products;
+    renderSummary();
+  }
+
+  function renderSummary() {
+    const cart     = Cart.get();
+    const subtotal = Cart.subtotal(window.PRODUCTS);
+    const shipping = Cart.shipping(window.PRODUCTS);
+    const discount = promoApplied ? Math.round(subtotal * 0.1) : 0;
+    const grand    = subtotal + shipping - discount;
+
+    document.getElementById('orderItemsList').innerHTML = cart.map(c => {
+      const p = window.PRODUCTS.find(p => p.id === c.id);
+      if (!p) return '';
+      return `
+      <div class="order-item">
+        <img class="order-item-img" src="/static/images/${p.image}" alt="${p.name}"
+             onerror="this.src='/static/images/placeholder.jpg'">
+        <div><div class="order-item-name">${p.name}</div><div class="order-item-meta">Qty: ${c.qty}</div></div>
+        <div class="order-item-price">${fmt(p.price * c.qty)}</div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('paySubtotal').textContent = fmt(subtotal);
+    document.getElementById('payShipping').textContent = shipping ? fmt(shipping) : 'FREE';
+    document.getElementById('payGrand').textContent    = fmt(grand);
+    const dr = document.getElementById('payDiscRow');
+    dr.style.display = discount ? '' : 'none';
+    document.getElementById('payDiscount').textContent = '−' + fmt(discount);
+  }
+
+  function selectPay(method) {
+    selectedPayment = method;
+    ['cod','upi','card'].forEach(m => document.getElementById('opt-'+m)?.classList.toggle('selected', m===method));
+    document.getElementById('upiField').style.display  = method==='upi'  ? '' : 'none';
+    document.getElementById('cardFields').style.display = method==='card' ? '' : 'none';
+  }
+
+  function fmtCard(el)   { let v=el.value.replace(/\D/g,'').slice(0,16); el.value=v.replace(/(.{4})/g,'$1 ').trim(); }
+  function fmtExpiry(el) { let v=el.value.replace(/\D/g,'').slice(0,4); if(v.length>2) v=v.slice(0,2)+' / '+v.slice(2); el.value=v; }
+
+  function validateAddress() {
+    hide('addrErr');
+    const req = ['delName','delPhone','delAddr1','delCity','delState','delPin'];
+    if (req.some(id => !document.getElementById(id).value.trim())) { show('addrErr'); return false; }
+    const phone = document.getElementById('delPhone').value.replace(/\D/g,'');
+    if (phone.length !== 10) { document.getElementById('addrErr').textContent='Valid 10-digit mobile required.'; show('addrErr'); return false; }
+    const pin = document.getElementById('delPin').value.replace(/\D/g,'');
+    if (pin.length !== 6)    { document.getElementById('addrErr').textContent='Valid 6-digit PIN required.'; show('addrErr'); return false; }
+    return true;
+  }
+
+  function validatePayment() {
+    hide('payErr');
+    if (selectedPayment === 'upi') {
+      const upi = document.getElementById('upiId').value.trim();
+      if (!upi || !upi.includes('@')) { document.getElementById('payErr').textContent='Enter a valid UPI ID.'; show('payErr'); return false; }
+    }
+    if (selectedPayment === 'card') {
+      const num = document.getElementById('cardNum').value.replace(/\s/g,'');
+      if (num.length < 16 || !document.getElementById('cardName').value.trim() || document.getElementById('cardCvv').value.length < 3) {
+        document.getElementById('payErr').textContent='Fill all card details correctly.'; show('payErr'); return false;
+      }
+    }
+    return true;
+  }
+
+  async function placeOrder() {
+    if (!validateAddress() || !validatePayment()) return;
+    const cart     = Cart.get();
+    const subtotal = Cart.subtotal(window.PRODUCTS);
+    const discount = promoApplied ? Math.round(subtotal * 0.1) : 0;
+    const shipping = Cart.shipping(window.PRODUCTS);
+    const grand    = subtotal + shipping - discount;
+
+    const payload = {
+      items: cart.map(c => { const p = window.PRODUCTS.find(p=>p.id===c.id); return {id:p.id,name:p.name,qty:c.qty,price:p.price}; }),
+      address: { name:document.getElementById('delName').value, phone:document.getElementById('delPhone').value, line1:document.getElementById('delAddr1').value, line2:document.getElementById('delAddr2').value, city:document.getElementById('delCity').value, state:document.getElementById('delState').value, pin:document.getElementById('delPin').value },
+      pay_method: selectedPayment, subtotal, discount, shipping, total: grand
+    };
+
+    const res = await apiFetch('/api/orders', { method:'POST', body: JSON.stringify(payload) });
+    if (!res.success) { showToast('❌ Could not place order. Try again.', true); return; }
+
+    Cart.clear(); sessionStorage.removeItem('dm_promo'); updateCartBadge();
+
+    document.getElementById('checkoutSection').style.display = 'none';
+    document.getElementById('successSection').style.display  = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    document.getElementById('confirmMsg').textContent =
+      `Thank you, {{ user.name.split(' ')[0] }}! Your dental instruments are on their way.`;
+    document.getElementById('confirmOrderId').innerHTML =
+      `📦 Order ID: <strong>${res.order_id}</strong>`;
+    const payLabels = { cod:'Cash on Delivery', upi:'UPI', card:'Credit/Debit Card' };
+    document.getElementById('confirmDetails').innerHTML =
+      `Estimated delivery: <strong>3–5 business days</strong><br>Payment: <strong>${payLabels[selectedPayment]}</strong> &nbsp;·&nbsp; Total: <strong>${fmt(grand)}</strong>`;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!window.LOGGED_IN) window.location.href = '/login?redirect=/payment';
+    if (!Cart.totalItems())  window.location.href = '/cart';
+    loadAndRender();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Catalog{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>📦 Product Catalog</h2>
+  <p>Professional dental instruments &amp; materials — all in one place</p>
+</div>
+
+<main class="container">
+
+  <!-- Search bar -->
+  <div class="search-wrap" style="max-width:600px;margin:2rem auto 0">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput"
+           placeholder="Search instruments… e.g. 'scaler', 'forceps', 'mirror'"
+           value="{{ search }}"
+           oninput="liveFilter()">
+  </div>
+
+  <div class="catalog-layout">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar-title">Categories</div>
+      {% for cat in categories %}
+      {% set count = products | selectattr('category', 'eq', cat) | list | length if cat != 'All' else products | length %}
+      <a href="{{ url_for('catalog', cat=cat) }}"
+         class="sidebar-cat {{ 'active' if active_cat == cat else '' }}">
+        {{ {'All':'🏪','Examination':'🔍','Extraction':'🦷','Periodontics':'⚡','Prosthodontics':'🧪','Restorative':'🛠️','Handpiece':'💨'}.get(cat,'📦') }}
+        {{ cat }}
+        <span class="sidebar-count">{{ products | length if cat == 'All' else products | selectattr('category','equalto',cat) | list | length }}</span>
+      </a>
+      {% endfor %}
+
+      <!-- Price range filter -->
+      <div style="margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid var(--border)">
+        <div class="sidebar-title">Max Price</div>
+        <div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-bottom:.5rem">
+          <span>₹100</span><span id="priceVal">₹1,500</span>
+        </div>
+        <input type="range" id="priceRange" min="100" max="1500" value="1500" step="50"
+               style="width:100%;accent-color:var(--teal)"
+               oninput="document.getElementById('priceVal').textContent='₹'+this.value; liveFilter()">
+      </div>
+    </aside>
+
+    <!-- ── Products area ── -->
+    <div>
+      <div class="results-bar">
+        <div class="results-count"><strong id="countNum">{{ products|length }}</strong> products found</div>
+        <select class="sort-select" id="sortSelect" onchange="liveFilter()">
+          <option value="default">Sort: Default</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="name-asc">Name: A–Z</option>
+        </select>
+      </div>
+
+      <div class="product-grid" id="catalogGrid">
+        {% for p in products %}
+        <div class="product-card" id="card-{{ p.id }}" data-price="{{ p.price }}" data-name="{{ p.name }}" data-category="{{ p.category }}" data-desc="{{ p.desc }}">
+          <div class="product-img-wrap">
+            <img src="{{ url_for('static', filename='images/' + (p.image if p.image else 'placeholder.jpg')) }}"
+                 alt="{{ p.name }}"
+                 onerror="this.src='{{ url_for('static', filename='images/placeholder.jpg') }}'">
+            {% if p.badge %}
+            <div class="product-badge {{ p.badge_type }}">{{ p.badge }}</div>
+            {% endif %}
+          </div>
+          <div class="product-body">
+            <div class="product-category">{{ p.category }}</div>
+            <div class="product-name">{{ p.name }}</div>
+            <div class="product-desc">{{ p.desc }}</div>
+            <div class="product-footer">
+              <div class="product-price">₹{{ '{:,}'.format(p.price) }}<small>incl. tax</small></div>
+              <button class="add-cart-btn" id="addBtn-{{ p.id }}" onclick="addToCartHandler({{ p.id }})">+ Add</button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="no-results" id="noResults">
+        <div style="font-size:3rem;margin-bottom:.8rem">🔍</div>
+        <strong style="display:block;font-size:1rem;color:var(--navy);margin-bottom:.4rem">No products found</strong>
+        Try a different search or category
+      </div>
+    </div>
+
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  /* All products for client-side filtering */
+  window.PRODUCTS = {{ products | tojson }};
+
+  /* Mark already-carted items */
+  document.addEventListener('DOMContentLoaded', () => {
+    const cart = Cart.get();
+    cart.forEach(c => {
+      const btn = document.getElementById('addBtn-' + c.id);
+      if (btn) { btn.textContent = '✓ Added'; btn.classList.add('added'); }
+    });
+  });
+
+  /* ── Live client-side filter (search + price + sort) ── */
+  function liveFilter() {
+    const q        = document.getElementById('searchInput').value.toLowerCase();
+    const maxPrice = parseInt(document.getElementById('priceRange').value);
+    const sort     = document.getElementById('sortSelect').value;
+    const cards    = Array.from(document.querySelectorAll('#catalogGrid .product-card'));
+
+    let visible = cards.filter(card => {
+      const name  = card.dataset.name.toLowerCase();
+      const cat   = card.dataset.category.toLowerCase();
+      const desc  = card.dataset.desc.toLowerCase();
+      const price = parseInt(card.dataset.price);
+      return price <= maxPrice && (!q || name.includes(q) || cat.includes(q) || desc.includes(q));
+    });
+
+    /* Sort */
+    if (sort === 'price-asc')  visible.sort((a,b) => parseInt(a.dataset.price) - parseInt(b.dataset.price));
+    if (sort === 'price-desc') visible.sort((a,b) => parseInt(b.dataset.price) - parseInt(a.dataset.price));
+    if (sort === 'name-asc')   visible.sort((a,b) => a.dataset.name.localeCompare(b.dataset.name));
+
+    /* Reorder DOM */
+    const grid = document.getElementById('catalogGrid');
+    cards.forEach(c => c.style.display = 'none');
+    visible.forEach(c => { c.style.display = ''; grid.appendChild(c); });
+
+    document.getElementById('countNum').textContent    = visible.length;
+    document.getElementById('noResults').style.display = visible.length ? 'none' : 'block';
+  }
+</script>
+{% endblock %}

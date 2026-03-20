@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block extra_css %}
+<style>
+  .hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 70% 40%,rgba(13,148,136,.35) 0%,transparent 60%); pointer-events:none; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══ HERO ══════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">🎓 Built for Dental Students</div>
+    <h1>Premium Dental Tools<br>at <em>Student Prices</em></h1>
+    <p>DentalMart brings you professional-grade instruments and materials — carefully curated for BDS &amp; MDS students. Everything you need, right when you need it.</p>
+    <div class="hero-actions">
+      <a href="{{ url_for('catalog') }}" class="btn btn-primary btn-lg">Browse Catalog →</a>
+      <a href="{{ url_for('login_page', tab='register') }}" class="btn btn-ghost btn-lg">Sign Up Free</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">50+</div><div class="stat-lbl">Products</div></div>
+      <div class="stat"><div class="stat-num">4.8 ★</div><div class="stat-lbl">Rating</div></div>
+      <div class="stat"><div class="stat-num">2000+</div><div class="stat-lbl">Students</div></div>
+      <div class="stat"><div class="stat-num">Fast</div><div class="stat-lbl">Delivery</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features strip ── -->
+<div class="features">
+  <div class="features-inner">
+    <div class="feature-item"><div class="feature-emoji">🚚</div><div><div class="feature-title">Free Delivery</div><div class="feature-desc">On orders above ₹999</div></div></div>
+    <div class="feature-item"><div class="feature-emoji">✅</div><div><div class="feature-title">Authentic Products</div><div class="feature-desc">Verified dental instruments</div></div></div>
+    <div class="feature-item"><div class="feature-emoji">↩️</div><div><div class="feature-title">Easy Returns</div><div class="feature-desc">7-day return policy</div></div></div>
+    <div class="feature-item"><div class="feature-emoji">🎓</div><div><div class="feature-title">Student Discount</div><div class="feature-desc">Up to 30% off on bundles</div></div></div>
+  </div>
+</div>
+
+<!-- ══ FEATURED PRODUCTS ═════════════════════════════════ -->
+<main class="container">
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Featured Products</div>
+        <div class="section-subtitle">Top picks for dental students this semester</div>
+      </div>
+      <a href="{{ url_for('catalog') }}" class="see-all">See All →</a>
+    </div>
+    <div class="product-grid" id="featuredGrid">
+      {% for p in featured %}
+      <div class="product-card" id="card-{{ p.id }}">
+        <div class="product-img-wrap">
+          <img src="{{ url_for('static', filename='images/' + p.image) }}"
+               alt="{{ p.name }}"
+               onerror="this.src='{{ url_for('static', filename='images/placeholder.jpg') }}'">
+          {% if p.badge %}
+          <div class="product-badge {{ p.badge_type }}">{{ p.badge }}</div>
+          {% endif %}
+        </div>
+        <div class="product-body">
+          <div class="product-category">{{ p.category }}</div>
+          <div class="product-name">{{ p.name }}</div>
+          <div class="product-desc">{{ p.desc }}</div>
+          <div class="product-footer">
+            <div class="product-price">₹{{ '{:,}'.format(p.price) }}<small>incl. tax</small></div>
+            <button class="add-cart-btn" id="addBtn-{{ p.id }}" onclick="addToCartHandler({{ p.id }})">+ Add</button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- ── Category quick links ── -->
+  <section class="section" style="padding-top:0">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Shop by Category</div>
+        <div class="section-subtitle">Browse instruments by department</div>
+      </div>
+    </div>
+    <div class="category-grid">
+      {% set cats = [('Examination','🔍'),('Extraction','🦷'),('Periodontics','⚡'),('Prosthodontics','🧪'),('Restorative','🛠️'),('Handpiece','💨')] %}
+      {% for cat, icon in cats %}
+      <a href="{{ url_for('catalog', cat=cat) }}" class="cat-chip">{{ icon }} {{ cat }}</a>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  /* Pass featured product data to JS for cart state check */
+  window.PRODUCTS = {{ featured | tojson }};
+  /* Mark already-carted items */
+  document.addEventListener('DOMContentLoaded', () => {
+    const cart = Cart.get();
+    cart.forEach(c => {
+      const btn = document.getElementById('addBtn-' + c.id);
+      if (btn) { btn.textContent = '✓ Added'; btn.classList.add('added'); }
+    });
+  });
+</script>
+{% endblock %}
