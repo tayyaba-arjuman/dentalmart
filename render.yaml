@@ -1,0 +1,18 @@
+# render.yaml — Render deployment config
+# Place this file in your repo root or inside backend/
+
+services:
+  - type: web
+    name: dentalmart
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: MONGO_URI
+        sync: false          # Set this manually in Render dashboard
+      - key: SECRET_KEY
+        generateValue: true  # Render auto-generates a secure key
+      - key: ADMIN_EMAIL
+        value: admin@dentalmart.in
+      - key: ADMIN_PASSWORD
+        sync: false          # Set this manually in Render dashboard
