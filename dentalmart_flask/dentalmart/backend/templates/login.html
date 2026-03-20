@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<main class="auth-page">
+  <div class="auth-card">
+
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🦷</div>
+      <div class="auth-title">Welcome to DentalMart</div>
+      <div class="auth-sub">Your one-stop shop for dental instruments</div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn {% if tab == 'login' %}active{% endif %}"    id="loginTabBtn"  onclick="switchTab('login')">Login</button>
+      <button class="tab-btn {% if tab == 'register' %}active{% endif %}" id="regTabBtn"    onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- ── LOGIN ── -->
+    <div id="loginForm" {% if tab == 'register' %}style="display:none"{% endif %}>
+      <div class="form-group">
+        <label for="loginEmail">Email Address</label>
+        <input class="form-input" type="email" id="loginEmail" placeholder="you@college.edu" autocomplete="email">
+        <div class="form-error" id="loginEmailErr">Please enter a valid email address.</div>
+      </div>
+      <div class="form-group">
+        <label for="loginPass">Password</label>
+        <div class="password-wrap">
+          <input class="form-input" type="password" id="loginPass" placeholder="Enter your password"
+                 autocomplete="current-password" style="padding-right:3rem">
+          <button type="button" class="toggle-pass" onclick="togglePwd('loginPass',this)">👁️</button>
+        </div>
+        <div class="form-error" id="loginPassErr">Password is required.</div>
+      </div>
+      <div class="form-error" id="loginCredErr" style="text-align:center;margin-bottom:.5rem">❌ Invalid email or password.</div>
+      <button class="btn btn-primary btn-full" onclick="handleLogin()">Login →</button>
+      <div class="form-success" id="loginSuccess">✅ Logged in! Redirecting…</div>
+      <div class="divider">or</div>
+      <p style="text-align:center;font-size:.85rem;color:var(--muted)">
+        Don't have an account? <a href="#" onclick="switchTab('register')" style="color:var(--teal);font-weight:600">Register here</a>
+      </p>
+    </div>
+
+    <!-- ── REGISTER ── -->
+    <div id="registerForm" {% if tab != 'register' %}style="display:none"{% endif %}>
+      <div class="form-group">
+        <label for="regName">Full Name</label>
+        <input class="form-input" type="text" id="regName" placeholder="e.g. Dr. Priya Sharma" autocomplete="name">
+        <div class="form-error" id="regNameErr">Full name is required.</div>
+      </div>
+      <div class="form-group">
+        <label for="regEmail">Email Address</label>
+        <input class="form-input" type="email" id="regEmail" placeholder="you@college.edu" autocomplete="email">
+        <div class="form-error" id="regEmailErr">Please enter a valid email address.</div>
+      </div>
+      <div class="form-group">
+        <label for="regPass">Password</label>
+        <div class="password-wrap">
+          <input class="form-input" type="password" id="regPass" placeholder="Minimum 6 characters"
+                 autocomplete="new-password" style="padding-right:3rem">
+          <button type="button" class="toggle-pass" onclick="togglePwd('regPass',this)">👁️</button>
+        </div>
+        <div class="form-error" id="regPassErr">Password must be at least 6 characters.</div>
+      </div>
+      <div class="form-group">
+        <label for="regPass2">Confirm Password</label>
+        <input class="form-input" type="password" id="regPass2" placeholder="Repeat password" autocomplete="new-password">
+        <div class="form-error" id="regPass2Err">Passwords do not match.</div>
+      </div>
+      <div class="form-error" id="regDupErr" style="text-align:center;margin-bottom:.5rem">❌ Email already registered.</div>
+      <button class="btn btn-primary btn-full" onclick="handleRegister()">Create Account →</button>
+      <div class="form-success" id="regSuccess">✅ Account created! Switching to login…</div>
+      <div class="divider">or</div>
+      <p style="text-align:center;font-size:.85rem;color:var(--muted)">
+        Already have an account? <a href="#" onclick="switchTab('login')" style="color:var(--teal);font-weight:600">Login here</a>
+      </p>
+    </div>
+
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  /* Redirect if already logged in */
+  if (window.LOGGED_IN) window.location.href = '/';
+
+  function switchTab(tab) {
+    document.getElementById('loginForm').style.display    = tab === 'login'    ? '' : 'none';
+    document.getElementById('registerForm').style.display = tab === 'register' ? '' : 'none';
+    document.getElementById('loginTabBtn').classList.toggle('active', tab === 'login');
+    document.getElementById('regTabBtn').classList.toggle('active',   tab === 'register');
+  }
+
+  function togglePwd(inputId, btn) {
+    const el = document.getElementById(inputId);
+    el.type  = el.type === 'password' ? 'text' : 'password';
+    btn.textContent = el.type === 'password' ? '👁️' : '🙈';
+  }
+
+  async function handleRegister() {
+    hideAll(['regNameErr','regEmailErr','regPassErr','regPass2Err','regDupErr','regSuccess']);
+    const name  = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim().toLowerCase();
+    const pass  = document.getElementById('regPass').value;
+    const pass2 = document.getElementById('regPass2').value;
+    let ok = true;
+    if (!name)                          { show('regNameErr');  ok = false; }
+    if (!email || !email.includes('@')) { show('regEmailErr'); ok = false; }
+    if (pass.length < 6)               { show('regPassErr');  ok = false; }
+    if (pass !== pass2)                 { show('regPass2Err'); ok = false; }
+    if (!ok) return;
+
+    const res = await apiFetch('/api/auth/register', {
+      method: 'POST', body: JSON.stringify({ name, email, password: pass })
+    });
+    if (!res.success) { show('regDupErr'); return; }
+    show('regSuccess');
+    setTimeout(() => switchTab('login'), 1500);
+  }
+
+  async function handleLogin() {
+    hideAll(['loginEmailErr','loginPassErr','loginCredErr','loginSuccess']);
+    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+    const pass  = document.getElementById('loginPass').value;
+    let ok = true;
+    if (!email || !email.includes('@')) { show('loginEmailErr'); ok = false; }
+    if (!pass)                          { show('loginPassErr');  ok = false; }
+    if (!ok) return;
+
+    const res = await apiFetch('/api/auth/login', {
+      method: 'POST', body: JSON.stringify({ email, password: pass })
+    });
+    if (!res.success) { show('loginCredErr'); return; }
+    show('loginSuccess');
+    const redirect = new URLSearchParams(location.search).get('redirect') || '/';
+    setTimeout(() => window.location.href = redirect, 1000);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    if (document.getElementById('loginForm').style.display !== 'none') handleLogin();
+    else handleRegister();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – DentalMart</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+{% if view == 'login' %}
+<!-- ══ ADMIN LOGIN ════════════════════════════════════════ -->
+<main class="auth-page" style="background:linear-gradient(135deg,#0f172a,#164e63)">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon" style="background:#1e293b;font-size:2rem">🔐</div>
+      <div class="auth-title">Admin Login</div>
+      <div class="auth-sub">DentalMart Admin Panel</div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+      <div style="background:#fee2e2;color:#b91c1c;border-radius:10px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.85rem">❌ {{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('admin_login') }}">
+      <div class="form-group">
+        <label for="email">Admin Email</label>
+        <input class="form-input" type="email" id="email" name="email" placeholder="admin@dentalmart.in" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input class="form-input" type="password" id="password" name="password" placeholder="Admin password" required>
+      </div>
+      <button class="btn btn-primary btn-full" type="submit" style="margin-top:.5rem">Enter Admin Panel →</button>
+    </form>
+
+    <div style="text-align:center;margin-top:1.2rem">
+      <a href="{{ url_for('index') }}" style="color:var(--teal);font-size:.85rem">← Back to Website</a>
+    </div>
+  </div>
+</main>
+
+{% else %}
+<!-- ══ ADMIN DASHBOARD ════════════════════════════════════ -->
+<div class="admin-layout">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <span class="logo-text">🦷 DentalMart<br><small style="font-size:.7rem;color:rgba(255,255,255,.4);font-weight:400">Admin Panel</small></span>
+    <nav class="admin-nav">
+      <a href="#overview"  onclick="showTab('overview')"  class="active" id="tab-overview">📊 Overview</a>
+      <a href="#orders"    onclick="showTab('orders')"    id="tab-orders">📦 Orders</a>
+      <a href="#products"  onclick="showTab('products')"  id="tab-products">🛠️ Products</a>
+      <a href="#users"     onclick="showTab('users')"     id="tab-users">👤 Users</a>
+    </nav>
+    <div style="margin-top:auto;padding-top:2rem">
+      <a href="{{ url_for('index') }}" style="color:rgba(255,255,255,.5);font-size:.8rem;display:block;margin-bottom:.5rem">← View Website</a>
+      <a href="{{ url_for('admin_logout') }}" style="color:rgba(255,255,255,.5);font-size:.8rem">🚪 Logout</a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="admin-main">
+
+    <div class="admin-header">
+      <div class="admin-title">Dashboard</div>
+      <div style="font-size:.8rem;color:var(--muted)">Logged in as admin</div>
+    </div>
+
+    <!-- ── Overview tab ── -->
+    <div id="pane-overview">
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="icon">👤</div>
+          <div class="label">Total Users</div>
+          <div class="value">{{ stats.users }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon">📦</div>
+          <div class="label">Total Orders</div>
+          <div class="value">{{ stats.orders }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon">🛠️</div>
+          <div class="label">Products</div>
+          <div class="value">{{ stats.products }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon">💰</div>
+          <div class="label">Revenue (₹)</div>
+          <div class="value">{{ '{:,}'.format(stats.revenue) }}</div>
+        </div>
+      </div>
+
+      <div class="admin-section-title">Recent Orders</div>
+      <table class="admin-table">
+        <thead>
+          <tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          {% for o in recent_orders %}
+          <tr>
+            <td><strong>{{ o.order_id }}</strong></td>
+            <td>{{ o.user_name or o.user_email }}</td>
+            <td>{{ o.items | length }} item(s)</td>
+            <td>₹{{ '{:,}'.format(o.total | int) }}</td>
+            <td>{{ {'cod':'COD','upi':'UPI','card':'Card'}.get(o.pay_method, o.pay_method) }}</td>
+            <td><span class="badge-status confirmed">{{ o.status | capitalize }}</span></td>
+            <td>{{ o.created_at[:10] if o.created_at else '—' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">No orders yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Orders tab ── -->
+    <div id="pane-orders" style="display:none">
+      <div class="admin-section-title">All Orders</div>
+      <table class="admin-table">
+        <thead>
+          <tr><th>Order ID</th><th>Customer</th><th>Email</th><th>Items</th><th>Subtotal</th><th>Shipping</th><th>Total</th><th>Payment</th><th>City</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          {% for o in recent_orders %}
+          <tr>
+            <td><strong>{{ o.order_id }}</strong></td>
+            <td>{{ o.user_name or '—' }}</td>
+            <td style="font-size:.78rem">{{ o.user_email }}</td>
+            <td>
+              {% for item in o.items %}
+                {{ item.name }} ×{{ item.qty }}<br>
+              {% endfor %}
+            </td>
+            <td>₹{{ '{:,}'.format(o.subtotal | int) }}</td>
+            <td>₹{{ '{:,}'.format(o.shipping | int) }}</td>
+            <td><strong>₹{{ '{:,}'.format(o.total | int) }}</strong></td>
+            <td>{{ o.pay_method | upper }}</td>
+            <td>{{ o.address.city if o.address else '—' }}</td>
+            <td style="font-size:.78rem">{{ o.created_at[:10] if o.created_at else '—' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="10" style="text-align:center;color:var(--muted);padding:2rem">No orders yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Products tab ── -->
+    <div id="pane-products" style="display:none">
+      <div class="admin-section-title">Product Catalog</div>
+      <table class="admin-table">
+        <thead>
+          <tr><th>ID</th><th>Image</th><th>Name</th><th>Category</th><th>Price (₹)</th><th>Badge</th></tr>
+        </thead>
+        <tbody>
+          {% for p in all_products %}
+          <tr>
+            <td>{{ p.id }}</td>
+            <td>
+              <img src="{{ url_for('static', filename='images/' + p.image) }}"
+                   alt="{{ p.name }}"
+                   onerror="this.src='{{ url_for('static', filename='images/placeholder.jpg') }}'"
+                   style="width:48px;height:48px;object-fit:contain;border-radius:6px;background:var(--bg)">
+            </td>
+            <td><strong>{{ p.name }}</strong><div style="font-size:.75rem;color:var(--muted);margin-top:2px">{{ p.desc[:60] }}…</div></td>
+            <td>{{ p.category }}</td>
+            <td>₹{{ '{:,}'.format(p.price) }}</td>
+            <td>{% if p.badge %}<span class="badge-status confirmed">{{ p.badge }}</span>{% else %}—{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Users tab ── -->
+    <div id="pane-users" style="display:none">
+      <div class="admin-section-title">Registered Users</div>
+      <table class="admin-table">
+        <thead>
+          <tr><th>Name</th><th>Email</th><th>Registered On</th></tr>
+        </thead>
+        <tbody>
+          {% for u in all_users %}
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:.6rem">
+                <div style="width:30px;height:30px;border-radius:50%;background:var(--teal-light);color:var(--teal-dark);font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center">
+                  {{ u.name[0].upper() }}
+                </div>
+                {{ u.name }}
+              </div>
+            </td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.created_at[:10] if u.created_at else '—' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:2rem">No users registered yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  function showTab(name) {
+    ['overview','orders','products','users'].forEach(t => {
+      document.getElementById('pane-' + t).style.display = t === name ? '' : 'none';
+      document.getElementById('tab-'  + t).classList.toggle('active', t === name);
+    });
+    event.preventDefault();
+  }
+</script>
+
+{% endif %}
+
+</body>
+</html>
