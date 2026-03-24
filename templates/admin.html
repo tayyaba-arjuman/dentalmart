@@ -108,7 +108,7 @@
           <tr>
             <td><strong>{{ o.order_id }}</strong></td>
             <td>{{ o.user_name or o.user_email }}</td>
-            <td>{{ o.items | length }} item(s)</td>
+            <td>{{ o["items"] | length }} item(s)</td>
             <td>₹{{ '{:,}'.format(o.total | int) }}</td>
             <td>{{ {'cod':'COD','upi':'UPI','card':'Card'}.get(o.pay_method, o.pay_method) }}</td>
             <td><span class="badge-status confirmed">{{ o.status | capitalize }}</span></td>
@@ -135,7 +135,7 @@
             <td>{{ o.user_name or '—' }}</td>
             <td style="font-size:.78rem">{{ o.user_email }}</td>
             <td>
-              {% for item in o.items %}
+              {% for item in o["items"] %}
                 {{ item.name }} ×{{ item.qty }}<br>
               {% endfor %}
             </td>
