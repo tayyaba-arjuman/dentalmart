@@ -48,30 +48,57 @@
       </div>
       <a href="{{ url_for('catalog') }}" class="see-all">See All →</a>
     </div>
-    <div class="product-grid" id="featuredGrid">
+    <div class="slider-wrapper">
+
+  <button class="slider-btn prev" onclick="slideProducts(-1)">
+    ❮
+  </button>
+
+  <div class="product-grid" id="featuredGrid">
       {% for p in featured %}
       <div class="product-card" id="card-{{ p.id }}">
         <div class="product-img-wrap">
           <img src="{{ url_for('static', filename='images/' + p.image) }}"
                alt="{{ p.name }}"
                onerror="this.src='{{ url_for('static', filename='images/placeholder.jpg') }}'">
-          {% if p.badge %}
-          <div class="product-badge {{ p.badge_type }}">{{ p.badge }}</div>
-          {% endif %}
+          {% if p.stock == 0 %}
+<div class="product-badge sale">Out of Stock</div>
+{% elif p.badge %}
+<div class="product-badge {{ p.badge_type }}">{{ p.badge }}</div>
+{% endif %}
         </div>
         <div class="product-body">
           <div class="product-category">{{ p.category }}</div>
+         {% if p.stock|default(1)|int > 0 %}
+  <div class="stock-badge">✅ In Stock</div>
+{% else %}
+  <div class="stock-badge out">❌ Out of Stock</div>
+{% endif %}
           <div class="product-name">{{ p.name }}</div>
           <div class="product-desc">{{ p.desc }}</div>
           <div class="product-footer">
             <div class="product-price">₹{{ '{:,}'.format(p.price) }}<small>incl. tax</small></div>
-            <button class="add-cart-btn" id="addBtn-{{ p.id }}" onclick="addToCartHandler({{ p.id }})">+ Add</button>
+           {% if p.stock == 0 %}
+<button class="add-cart-btn" disabled>
+    Out of Stock
+</button>
+{% else %}
+<button class="add-cart-btn" id="addBtn-{{ p.id }}" onclick="addToCartHandler({{ p.id }})">
+    + Add
+</button>
+{% endif %}
           </div>
         </div>
       </div>
-      {% endfor %}
+            {% endfor %}
     </div>
-  </section>
+
+    <button class="slider-btn next" onclick="slideProducts(1)">
+      ❯
+    </button>
+
+</div>
+</section>
 
   <!-- ── Category quick links ── -->
   <section class="section" style="padding-top:0">
@@ -88,6 +115,43 @@
       {% endfor %}
     </div>
   </section>
+  <!-- ══ WHY CHOOSE DENTAL MART ═══════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Why Choose DentalMart?</div>
+      <div class="section-subtitle">
+        Trusted by dental students across India
+      </div>
+    </div>
+  </div>
+
+  <div class="why-grid">
+    <div class="why-card">
+      <div class="why-icon">🦷</div>
+      <h3>Dental-Focused Products</h3>
+      <p>Specially selected instruments and materials required by BDS and MDS students.</p>
+    </div>
+
+    <div class="why-card">
+      <div class="why-icon">💰</div>
+      <h3>Affordable Pricing</h3>
+      <p>Student-friendly prices without compromising product quality.</p>
+    </div>
+
+    <div class="why-card">
+      <div class="why-icon">🚚</div>
+      <h3>Fast Delivery</h3>
+      <p>Quick shipping to ensure you receive your instruments on time.</p>
+    </div>
+
+    <div class="why-card">
+      <div class="why-icon">⭐</div>
+      <h3>Trusted Quality</h3>
+      <p>Authentic dental products sourced from reliable suppliers.</p>
+    </div>
+  </div>
+</section>
 </main>
 
 {% endblock %}
@@ -96,6 +160,7 @@
 <script>
   /* Pass featured product data to JS for cart state check */
   window.PRODUCTS = {{ featured | tojson }};
+
   /* Mark already-carted items */
   document.addEventListener('DOMContentLoaded', () => {
     const cart = Cart.get();
@@ -104,5 +169,22 @@
       if (btn) { btn.textContent = '✓ Added'; btn.classList.add('added'); }
     });
   });
+
+  /* ================= SLIDER CODE ================= */
+
+  let slider = document.getElementById("featuredGrid");
+
+  function slideProducts(direction) {
+      const card = document.querySelector(".product-card");
+      if (!card) return;
+
+      const cardWidth = card.offsetWidth + 20;
+
+      slider.scrollBy({
+          left: direction * cardWidth * 2,
+          behavior: "smooth"
+      });
+  }
+
 </script>
 {% endblock %}

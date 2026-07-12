@@ -64,20 +64,38 @@
             <img src="{{ url_for('static', filename='images/' + (p.image if p.image else 'placeholder.jpg')) }}"
                  alt="{{ p.name }}"
                  onerror="this.src='{{ url_for('static', filename='images/placeholder.jpg') }}'">
-            {% if p.badge %}
-            <div class="product-badge {{ p.badge_type }}">{{ p.badge }}</div>
-            {% endif %}
+           {% if p.stock|default(1)|int == 0 %}
+  <div class="product-badge sale">Out of Stock</div>
+{% elif p.badge %}
+  <div class="product-badge {{ p.badge_type }}">{{ p.badge }}</div>
+{% endif %}
           </div>
           <div class="product-body">
             <div class="product-category">{{ p.category }}</div>
             <div class="product-name">{{ p.name }}</div>
             <div class="product-desc">{{ p.desc }}</div>
-            <div class="product-footer">
-              <div class="product-price">₹{{ '{:,}'.format(p.price) }}<small>incl. tax</small></div>
-              <button class="add-cart-btn" id="addBtn-{{ p.id }}" onclick="addToCartHandler({{ p.id }})">+ Add</button>
+           <div class="product-footer">
+  
+  <div class="product-price">
+    ₹{{ '{:,}'.format(p.price) }}<small>incl. tax</small>
+  </div>
+
+  {% if p.stock|default(1)|int == 0 %}
+    <button class="add-cart-btn" disabled>
+      Out of Stock
+    </button>
+  {% else %}
+    <button class="add-cart-btn"
+            id="addBtn-{{ p.id }}"
+            onclick="addToCartHandler({{ p.id }})">
+      + Add
+    </button>
+  {% endif %}
+
+</div>
             </div>
           </div>
-        </div>
+        
         {% endfor %}
       </div>
 
