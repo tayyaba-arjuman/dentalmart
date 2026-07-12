@@ -37,6 +37,9 @@ from bson import ObjectId
 # ── App setup ────────────────────────────────────────────────────────────────
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dentalmart-dev-secret-change-in-prod")
+print("=" * 50)
+print("MONGO_URI exists:",os.environ.get("MONGO_URI") is not None)
+print("=" * 50)
 
 # ── MongoDB ──────────────────────────────────────────────────────────────────
 # Set MONGO_URI as an environment variable on Render.
