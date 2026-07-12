@@ -41,7 +41,7 @@ app.secret_key = os.environ.get("SECRET_KEY", "dentalmart-dev-secret-change-in-p
 # ── MongoDB ──────────────────────────────────────────────────────────────────
 # Set MONGO_URI as an environment variable on Render.
 # Local default: mongodb://localhost:27017/dentalmart
-app.config["MONGO_URI"] = "mongodb+srv://tayyabaarjuman_db_user:ojaJEykxXvOjwXzJ@cluster0.pjzig1i.mongodb.net/dentalmart?retryWrites=true&w=majority&appName=Cluster0"
+app.config["MONGO_URI"] = "mongodb+srv://tayyabaarjuman_db_user:arjuman3126@cluster0.pjzig1i.mongodb.net/dentalmart?retryWrites=true&w=majority&appName=Cluster0"
 mongo = PyMongo(app)
 
 # ── Admin credentials (set via env vars on Render) ───────────────────────────
@@ -52,7 +52,7 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 SEED_PRODUCTS = [
     {"id": 1,  "name": "Dental Mirror",           "category": "Examination",    "price": 250,  "badge": "Best Seller", "badge_type": "",       "image": "dental-mirror.jpg",      "desc": "Stainless steel #5 mouth mirror with front-surface reflection. Essential for intraoral examination."},
     {"id": 2,  "name": "Dental Explorer",          "category": "Examination",    "price": 300,  "badge": "Popular",     "badge_type": "",       "image": "dental-explorer.jpg",    "desc": "Curved 5/23 explorer for caries detection and cavity depth measurement."},
-    {"id": 3,  "name": "Extraction Forceps",       "category": "Extraction",     "price": 1200, "badge": "New",         "badge_type": "new",    "image": "forceps.jpg",            "desc": "German steel upper molar extraction forceps. Autoclavable, mirror finish."},
+    {"id": 3,  "name": "Extraction Forceps",       "category": "Extraction",     "price": 1200, "stock": 0, "badge": "Out of Stock",         "badge_type": "sale",    "image": "forceps.jpg",            "desc": "German steel upper molar extraction forceps. Autoclavable, mirror finish."},
     {"id": 4,  "name": "Sickle Scaler",            "category": "Periodontics",   "price": 500,  "badge": "Sale",        "badge_type": "sale",   "image": "scaler.jpg",             "desc": "Manual sickle scaler with 204S tip for supragingival debridement."},
     {"id": 5,  "name": "Impression Tray",          "category": "Prosthodontics", "price": 350,  "badge": "",            "badge_type": "",       "image": "impression-tray.jpg",    "desc": "Full-arch perforated stainless steel impression tray. Set of 3 sizes (S/M/L)."},
     {"id": 6,  "name": "College Plier",            "category": "Examination",    "price": 180,  "badge": "",            "badge_type": "",       "image": "college-plier.jpg",      "desc": "Non-serrated cotton plier for cotton roll placement and small item transfer."},
@@ -62,6 +62,20 @@ SEED_PRODUCTS = [
     {"id": 10, "name": "Cement Spatula",           "category": "Restorative",    "price": 160,  "badge": "",            "badge_type": "",       "image": "cement-spatula.jpg",     "desc": "Flexible steel spatula for mixing zinc oxide, GIC and other dental cements."},
     {"id": 11, "name": "Extraction Elevator",      "category": "Extraction",     "price": 420,  "badge": "",            "badge_type": "",       "image": "elevator.jpg",           "desc": "Coupland #1 elevator for tooth luxation prior to forceps extraction."},
     {"id": 12, "name": "Carbide Bur Kit",          "category": "Handpiece",      "price": 650,  "badge": "Popular",     "badge_type": "",       "image": "bur-kit.jpg",            "desc": "10-piece carbide bur set for cavity preparation. FG shank, multiple types."},
+    {"id": 13, "name": "Rubber Dam Kit",           "category": "Endodontics",    "price": 1800,    "badge": "New",            "badge_type": "", "image": "rubber-dam-kit.jpg",     "desc": "Complete rubber dam isolation kit with clamps, frame, punch, and forceps for restorative and endodontic procedures."},
+    {"id": 14, "name": "Endodontic File Set", "category": "Endodontics", "price": 650, "badge": "Popular", "badge_type": "", "image": "endodontic-file-set.jpg", "desc": "Stainless steel endodontic file set used for cleaning, shaping, and enlarging root canals."},
+    {"id": 15, "name": "Apex Locator", "category": "Endodontics", "price": 3200, "badge": "New", "badge_type": "", "image": "apex-locator.jpg", "desc": "Electronic apex locator for accurate determination of working length during root canal treatment."},
+    {"id": 16, "name": "Dental Matrix Band Set", "category": "Restorative", "price": 350, "badge": "", "badge_type": "", "image": "dental-matrix-band-set.jpg", "desc": "Matrix band system used to create proper tooth contours during restorative procedures."},
+    {"id": 17, "name": "Composite Filling Kit", "category": "Restorative", "price": 1200, "badge": "Popular", "badge_type": "", "image": "composite-filling-kit.jpg", "desc": "Complete composite restoration kit containing essential instruments for filling procedures."},
+    {"id": 18, "name": "LED Curing Light", "category": "Restorative", "price": 2500, "badge": "New", "badge_type": "", "image": "LED-curing-light.jpg", "desc": "High-intensity LED curing light for rapid polymerization of dental composite materials."},
+    {"id": 19, "name": "Air-Water Syringe Tips", "category": "General Dentistry", "price": 250, "badge": "", "badge_type": "", "image": "Air-Water-syringe-tips.jpg", "desc": "Disposable air-water syringe tips designed for effective rinsing and drying during procedures."},
+    {"id": 20, "name": "Alginate Impression Material", "category": "Prosthodontics", "price": 550, "badge": "", "badge_type": "", "image": "alginate-impression-material.jpg", "desc": "Fast-setting alginate material used for accurate dental impressions and study models."},
+    {"id": 21, "name": "Orthodontic Bracket Kit", "category": "Orthodontics", "price": 1800, "badge": "Popular", "badge_type": "", "image": "orthodontic-bracket-kit.jpg", "desc": "Comprehensive orthodontic bracket kit suitable for fixed appliance treatments."},
+    {"id": 22, "name": "Dental Rubber Bowl", "category": "Dental Materials", "price": 180, "badge": "", "badge_type": "", "image": "dental-rubber-bowl.jpg", "desc": "Flexible rubber bowl used for mixing alginate, plaster, and other dental materials."},
+    {"id": 23, "name": "Amalgam Carrier", "category": "Restorative", "price": 350, "badge": "", "badge_type": "", "image": "amalgam-carrier.jpg", "desc": "Double-ended amalgam carrier for precise placement of restorative materials."},
+    {"id": 24, "name": "Articulating Paper Pack", "category": "Prosthodontics", "price": 280, "badge": "New", "badge_type": "", "image": "articulating-paper-pack.jpg", "desc": "Colored articulating paper used to identify occlusal contacts and bite discrepancies."},
+    {"id": 25, "name": "Articulating Paper Holder", "category": "Prosthodontics", "price": 350, "badge": "", "badge_type": "", "image": "articulating-paper-holder.jpg", "desc": "Stainless steel holder designed for easy handling of articulating paper during occlusal checks."},
+    {"id": 26, "name": "Dental Wax Knife", "category": "Prosthodontics", "price": 280, "badge": "", "badge_type": "", "image": "dental-wax-knife.jpg", "desc": "Precision wax carving knife used in denture, crown, and bridge laboratory procedures."},
 ]
 
 def seed_db():

@@ -41,7 +41,7 @@ app.secret_key = os.environ.get("SECRET_KEY", "dentalmart-dev-secret-change-in-p
 # ── MongoDB ──────────────────────────────────────────────────────────────────
 # Set MONGO_URI as an environment variable on Render.
 # Local default: mongodb://localhost:27017/dentalmart
-app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
+app.config["MONGO_URI"] = "mongodb://localhost:27017/dentalmart"
 mongo = PyMongo(app)
 
 # ── Admin credentials (set via env vars on Render) ───────────────────────────
